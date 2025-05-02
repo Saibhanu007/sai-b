@@ -1,0 +1,42 @@
+module comma_inserter (
+    input clk,                     // Clock signal
+    input rst,                     // Reset signal
+    input [7:0] data_in,          // Input data
+    output reg [7:0] data_out   // Output data (with inserted commas)
+   
+);
+reg  data_valid;      
+ reg data_out_valid;      // Signal indicating valid output data
+    // Define multiple comma values to be inserted
+    localparam COMMA_1 = 8'b0000_0111; // Example comma value 1
+    localparam COMMA_2 = 8'b0001_1100; // Example comma value 2
+    localparam COMMA_3 = 8'b0111_0110; // Example comma value 3
+    localparam COMMA_4 = 8'b1101_1010; // Example comma value 4
+    
+    always @(posedge clk or posedge rst) begin
+        if (rst) begin
+            data_out <= 8'b0;        // Reset output data
+            data_out_valid <= 1'b0;  // Reset output valid signal
+        end else if (data_valid) begin
+            // Check conditions for different comma insertions
+            if (data_in == 8'b0000_0111) begin
+                data_out <= COMMA_1;  // Insert first comma
+                data_out_valid <= 1'b1; // Mark output as valid
+            end else if (data_in == 8'b0001_1100) begin
+                data_out <= COMMA_2;  // Insert second comma
+                data_out_valid <= 1'b1; // Mark output as valid
+            end else if (data_in == 8'b0111_0110) begin
+                data_out <= COMMA_3;  // Insert third comma
+                data_out_valid <= 1'b1; // Mark output as valid
+            end else if (data_in == 8'b1101_1010) begin
+                data_out <= COMMA_4;  // Insert fourth comma
+                data_out_valid <= 1'b1; // Mark output as valid
+            end else begin
+                data_out <= data_in;   // Pass through input data
+                data_out_valid <= 1'b1; // Mark output as valid
+            end
+        end else begin
+            data_out_valid <= 1'b0;      // Clear output valid if input is not valid
+        end
+    end
+endmodule

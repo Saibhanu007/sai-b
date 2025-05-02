@@ -1,0 +1,24 @@
+module VCO_advance (
+    input wire clk,                    // System clock
+    input wire rst,                    // Reset signal
+    input wire [7:0] control_voltage,  // Control voltage from Loop Filter
+    output reg vco_out                 // Output VCO clock
+);
+    reg [15:0] counter;
+    reg [15:0] threshold;
+
+    always @(posedge clk or posedge rst) begin
+        if (rst) begin
+            counter <= 0;
+            vco_out <= 0;
+        end else begin
+            threshold <= (control_voltage == 0) ? 16'h4000 : (256 - control_voltage) * 256;
+            counter <= counter + 1;
+
+            if (counter >= threshold) begin
+                counter <= 0;
+                vco_out <= ~vco_out;
+            end
+        end
+    end
+endmodule

@@ -1,0 +1,79 @@
+
+// Hamming Encoder Module (Hamming(12,8))
+module encoder_8b10b_serializer (
+   input clk,            
+    input reset,          
+        input  [7:0] data_in,
+    input en,             
+  
+    output reg serial_out,
+    output reg data_send
+);
+wire   [11:0] code_ham;// 12-bit output code with parity bits
+ reg [9:0] encoded_data;
+reg [3:0] bit_index;
+   // 8-bit input data
+    
+
+    // Hamming(12,8) encoding: data_in -> [d1, d2, d3, d4, d5, d6, d7, d8]
+    // code_out -> [p1, p2, d1, p3, d2, d3, d4, p4, d5, d6, d7, d8]
+
+    // Calculate parity bits
+    assign code_ham[0] = data_in[0] ^ data_in[1] ^ data_in[3] ^ data_in[4] ^ data_in[6];
+    assign code_ham[1] = data_in[0] ^ data_in[2] ^ data_in[3] ^ data_in[5] ^ data_in[6] ;
+    assign code_ham[2] = data_in[0];
+    assign code_ham[3] = data_in[1] ^ data_in[2] ^ data_in[3] ^ data_in[7];
+    assign code_ham[4] = data_in[1];
+    assign code_ham[5] = data_in[2];
+    assign code_ham[6] = data_in[3];
+    assign code_ham[7] = data_in[4]^data_in[5]^data_in[6]^data_in[7];
+    assign code_ham[8] = data_in[4];
+    assign code_ham[9] = data_in[5];
+    assign code_ham[10] = data_in[6];
+    assign code_ham[11] = data_in[7]; // The 12th bit can be used as padding or adjust accordingly
+
+             // Keeps track of the current bit being serialized
+
+    // 8b/10b Encoding
+    always @(*) begin
+       
+           case (code_ham[11:0])  // Adjusted for 8-bit input
+            12'b000000_110100 : encoded_data <= 10'b00000_11111;
+            12'b000111_100000 : encoded_data <= 10'b00110_00111;
+            12'b011110_110011 : encoded_data <= 10'b00011_00111;
+            12'b110111_011000 : encoded_data <= 10'b00111_11000;
+           
+                default:     encoded_data = 10'b0000000000; // Error case
+            endcase
+        end
+ 
+
+ // Serialization logic
+
+    always @(posedge clk or posedge reset) begin
+        if (reset) begin
+          
+          serial_out <=1'b0;
+  bit_index <= 4'd0;
+            data_send <= 1'b0;
+        end else if (en ) begin
+        
+          serial_out <= encoded_data[bit_index];
+
+
+
+            if (bit_index == 4'h9) begin
+                bit_index <= 4'h0;
+                data_send <= 1'b1;
+            end
+            else if(bit_index == 4'ha) begin
+             bit_index <= 4'h1;
+                data_send <= 1'b0;
+            end
+             else begin
+                bit_index <= bit_index + 1;
+                data_send <= 1'b0;
+            end
+        end
+    end
+endmodule

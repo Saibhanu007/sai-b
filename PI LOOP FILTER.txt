@@ -1,0 +1,35 @@
+
+
+module PI_LoopFilter_advanced(
+    input wire clk,              // System clock
+    input wire rst,              // Reset signal
+    input wire up,               // PFD 'up' signal (increase VCO frequency)
+    input wire down,             // PFD 'down' signal (decrease VCO frequency)
+    output reg [7:0] control_voltage  // Output control voltage to VCO
+);
+    reg [7:0] integral;          // Integral term
+    reg [7:0] proportional;      // Proportional term
+
+    always @(posedge clk or posedge rst) begin
+        if (rst) begin
+            integral <= 8'b0;           // Reset integral term
+            proportional <= 8'b0;       // Reset proportional term
+            control_voltage <= 8'b0;     // Reset control voltage
+        end else begin
+            // Update proportional and integral terms
+            if (up) begin
+                if (proportional < 8'hFF)
+                    proportional <= proportional + 1;  // Increase proportional term
+                if (integral < 8'hFF)
+                    integral <= integral + 1;         // Increase integral term
+            end else if (down) begin
+                if (proportional > 8'h00)
+                    proportional <= proportional - 1;  // Decrease proportional term
+                if (integral > 8'h00)
+                    integral <= integral - 1;         // Decrease integral term
+            end
+            
+            control_voltage <= proportional + integral;  // Combine terms for control voltage
+        end
+    end
+endmodule

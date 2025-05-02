@@ -1,0 +1,22 @@
+
+module PhaseFrequencyDetector1 (
+    input wire clk_ref,    // Reference clock
+    input wire clk_vco,    // VCO clock
+    output reg up,         // Control signal to increase VCO frequency
+    output reg down        // Control signal to decrease VCO frequency
+);
+    reg ref_last, vco_last;
+
+    always @(posedge clk_ref or posedge clk_vco) begin
+        if (clk_ref && !ref_last) begin
+            up <= 1;
+            down <= 0;  // Ensure 'down' is reset when 'up' is set
+        end 
+        if (clk_vco && !vco_last) begin
+            down <= 1;
+            up <= 0;    // Ensure 'up' is reset when 'down' is set
+        end
+        ref_last <= clk_ref;
+        vco_last <= clk_vco;
+    end
+endmodule

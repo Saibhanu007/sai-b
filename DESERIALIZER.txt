@@ -1,0 +1,58 @@
+
+// Deserializer Module
+module deserializer_10b_8b (
+    input clk,
+    input rst,
+    input ser_in,
+    input en1,
+    output reg [11:0] data_out,
+
+    output reg data_ready
+);
+
+   
+     reg [9:0] parallel_data;
+     reg [9:0] parallel_data1;
+      reg [3:0] bit_index;
+  
+    // Parallel Data Shift Register and ds Logic
+    always @(posedge clk or posedge rst) begin
+        if (rst) begin
+            parallel_data <= 10'd0;
+             bit_index <= 4'd0;
+              data_ready <= 1'b0;
+        end else if (en1  ) begin
+            parallel_data <= {ser_in, parallel_data[8:1]};
+     
+             if (bit_index == 4'd9) begin
+                bit_index <= 4'd0;
+                data_ready <= 1'b1;
+            end else begin
+                bit_index <= bit_index + 1;
+                data_ready <= 1'b0;
+
+ end
+        end
+    end
+    
+    always @(posedge clk or posedge rst) begin
+        if (rst) begin
+            parallel_data1 <= 10'd0;end
+            else if (bit_index ==0) begin
+             parallel_data1 <= parallel_data;end end
+    
+    // Data Output Logic
+    always @(*) begin
+        
+            case (parallel_data1)
+                  10'b00000_11111: data_out <= 12'b000000110100; // Example decoding
+                10'b00110_00111: data_out <= 12'b000111100000; // Example decoding
+                10'b00011_00111: data_out <= 12'b011110110011; // Example decoding
+                10'b00111_11000: data_out <= 12'b110111011000; // Example decoding
+              
+                default:         data_out = 12'b111000111000; // Error case
+            endcase
+        end
+  
+    
+endmodule

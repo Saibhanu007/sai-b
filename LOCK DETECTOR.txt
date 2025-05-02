@@ -1,0 +1,28 @@
+
+module Lock_Detector (
+    input wire clk,          // System clock
+    input wire rst,          // Reset signal
+    input wire up,           // PFD up signal
+    input wire down,         // PFD down signal
+    output reg lock          // Lock signal
+);
+    reg [3:0] lock_counter;  // Counter for lock detection
+    parameter LOCK_THRESHOLD = 4'd8;
+
+    always @(posedge clk or posedge rst) begin
+        if (rst) begin
+            lock_counter <= 0;
+            lock <= 0;
+        end else begin
+            if (~up && ~down) begin
+                if (lock_counter < LOCK_THRESHOLD)
+                    lock_counter <= lock_counter + 1;
+                else
+                    lock <= 1;
+            end else begin
+                lock_counter <= 0;
+                lock <= 0;
+            end
+        end
+    end
+endmodule

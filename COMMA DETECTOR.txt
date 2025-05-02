@@ -1,0 +1,32 @@
+
+
+module comma_detector (
+    input  clk,            // Clock signal
+    input  rst,            // Reset signal
+    input  [7:0] data_out, // 8-bit output from deserializer
+    input  data_ready,     // Signal indicating data is ready
+    output reg comma_detected // Indicates if a comma is detected
+);
+
+    // Define the comma sequence (for example purposes, assume these values are commas)
+
+    localparam COMMA_1 = 8'b0000_0111; 
+    localparam COMMA_2 = 8'b0001_1100; 
+        localparam COMMA_3 = 8'b0111_0110; 
+    localparam COMMA_4 = 8'b1101_1010;
+    
+    always @(posedge clk or posedge rst) begin
+        if (rst) begin
+            comma_detected <= 1'b0; // Reset comma detected signal
+        end else if (data_ready) begin
+            // Check each constant explicitly
+            if (data_out == COMMA_1 || data_out == COMMA_2 || 
+                data_out == COMMA_3 || data_out == COMMA_4) begin
+                comma_detected <= 1'b1; // Set flag if comma detected
+            end else begin
+                comma_detected <= 1'b0; // Clear flag if no comma
+            end
+        end
+    end
+endmodule
+

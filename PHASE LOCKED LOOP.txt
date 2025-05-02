@@ -1,0 +1,18 @@
+module pll (
+input clk,
+input rst,
+input  clk_ref,    
+ output vco_out,
+output lock 
+);
+
+wire  up;
+wire down;
+wire [7:0] control_voltage;
+
+PhaseFrequencyDetector1 p1 (clk_ref,vco_out,up,down);
+PI_LoopFilter_advanced pp2 (clk,rst,up,down,control_voltage);
+VCO_advance ppp3 (clk,rst,control_voltage,vco_out);
+Lock_Detector  p4(clk,rst,up,down,lock);
+
+endmodule

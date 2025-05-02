@@ -1,0 +1,67 @@
+
+// Top Module
+module project (
+    input clk,
+ 
+    input reset,
+    input [7:0] data_in,
+    input en,
+    output ser_out,
+    output data_send,
+   
+     input en1,
+     input clk_ref,
+     output lock ,
+     output vco_out,
+    output [7:0] data_out,
+    output data_ready,
+    output  comma_detected
+);
+
+    wire [11:0] hamming_decoded_data;
+    wire hamming_error;
+    wire [7:0]data_out1;
+    
+   pll p1 (clk,rst,clk_ref,vco_out,lock);
+    
+    comma_inserter c1(vco_out,rst,data_in,data_out1);
+   
+    encoder_8b10b_serializer e1 (
+        .clk(vco_out),
+        .reset(reset),
+          .data_in(data_out1),
+        .en(en),
+        
+        .serial_out(ser_out),
+     
+        .data_send(data_send)
+    );
+    
+   
+
+    deserializer_10b_8b d1 (
+        .clk(vco_out),
+        .rst(reset),
+        .ser_in(ser_out),
+        .en1(en1),
+        .data_out(hamming_decoded_data),
+         
+        .data_ready(data_ready)
+       
+    );
+
+ // Instantiate Hamming Decoder
+    hamming_decoder h_dec (
+        .code_in(hamming_decoded_data),
+        .data_out(data_out),
+        .error(hamming_error)
+    );
+    
+    
+    comma_detector d3(vco_out,rst,data_out,data_ready,comma_detected);
+    
+    // Output assignments
+    assign error = hamming_error;
+
+endmodule
+

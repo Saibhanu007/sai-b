@@ -1,0 +1,59 @@
+
+// Hamming Decoder Module
+module hamming_decoder (
+    input [11:0] code_in,  // 12-bit Hamming encoded input
+    output [7:0] data_out, // Decoded 8-bit output data
+    output error           // Error detection output
+);
+    wire p1, p2, p3, p4;
+    wire [7:0] d;
+
+    // Extract the parity bits and data bits from the input
+    assign p1 = code_in[0];
+    assign p2 = code_in[1];
+    assign p3 = code_in[3];
+    assign p4 = code_in[7];
+    
+    assign d[0] = code_in[2];
+    assign d[1] = code_in[4];
+    assign d[2] = code_in[5];
+    assign d[3] = code_in[6];
+    assign d[4] = code_in[8];
+    assign d[5] = code_in[9];
+    assign d[6] = code_in[10];
+    assign d[7] = code_in[11];
+
+    // Syndrome bits for error detection
+    wire s1 = p1 ^ d[0] ^ d[1] ^ d[3] ^ d[4] ^ d[6];
+    wire s2 = p2 ^ d[0] ^ d[2] ^ d[3] ^ d[5] ^ d[6];
+    wire s3 = p3 ^ d[1] ^ d[2] ^ d[3] ^ d[7];
+    wire s4 = p4 ^ d[4] ^ d[5] ^ d[6] ^ d[7];
+
+    // Combine syndrome bits to detect error location (if any)
+    wire [3:0] syndrome = {s4, s3, s2, s1};
+
+    // Correct the error if detected
+    reg [7:0] corrected_data;
+    always @(*)  begin
+        corrected_data = d;
+        if (syndrome != 4'b0000) begin
+            case (syndrome)
+                4'b0001: corrected_data[0] = ~d[0];
+                4'b0010: corrected_data[1] = ~d[1];
+                4'b0011: corrected_data[2] = ~d[2];
+                4'b0100: corrected_data[3] = ~d[3];
+                4'b0101: corrected_data[4] = ~d[4];
+                4'b0110: corrected_data[5] = ~d[5];
+                4'b0111: corrected_data[6] = ~d[6];
+                4'b1000: corrected_data[7] = ~d[7];
+                default: corrected_data = d;
+            endcase
+        end
+        else 
+        corrected_data = d;
+    end
+
+    // Assign outputs
+    assign data_out = corrected_data;
+    assign error = (syndrome != 4'b0000);  // Error detected if syndrome is non-zero
+endmodule
