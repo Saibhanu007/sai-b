@@ -1,0 +1,103 @@
+`timescale 1ns/1ps
+
+module tb_project;
+    // Clock periods
+    localparam MAIN_PERIOD = 10;   // 100 MHz main clock
+    localparam REF_PERIOD  = 8;    // 125 MHz reference clock
+
+    // Inputs to DUT
+    reg clk;
+    reg reset;
+    reg [7:0] data_in;
+    reg en;
+    reg en1;
+    reg clk_ref;
+
+    // Outputs from DUT
+    wire ser_out;
+    wire data_send;
+    wire lock;
+    wire vco_out;
+    wire [7:0] data_out;
+    wire data_ready;
+    wire comma_detected;
+
+    // Instantiate the design under test
+    project dut (
+        .clk(clk),
+        .reset(reset),
+        .data_in(data_in),
+        .en(en),
+        .ser_out(ser_out),
+        .data_send(data_send),
+        .en1(en1),
+        .clk_ref(clk_ref),
+        .lock(lock),
+        .vco_out(vco_out),
+        .data_out(data_out),
+        .data_ready(data_ready),
+        .comma_detected(comma_detected)
+    );
+
+    // Generate main clock
+    initial clk = 0;
+    always #(MAIN_PERIOD/2) clk = ~clk;
+
+    // Generate reference clock
+    initial clk_ref = 0;
+    always #(REF_PERIOD/2) clk_ref = ~clk_ref;
+
+    // Stimulus
+    initial begin
+        // Initialize inputs
+        reset    = 1;
+        data_in  = 8'h00;
+        en       = 0;
+        en1      = 0;
+
+        // Dump waves
+        $dumpfile("tb_project.vcd");
+        $dumpvars(0, tb_project);
+
+        // Release reset after a few cycles
+        #(MAIN_PERIOD * 5);
+        reset = 0;
+
+        // Enable serializer and deserializer
+        en  = 1;
+        en1 = 1;
+
+        // Send a normal data byte (not a comma)
+        data_in = 8'hA5;
+        #(MAIN_PERIOD * 20);
+
+        // Send comma values one by one
+        // COMMA_1 = 8'b0000_0111 = 0x07
+        data_in = 8'h07;
+        #(MAIN_PERIOD * 20);
+
+        // COMMA_2 = 8'b0001_1100 = 0x1C
+        data_in = 8'h1C;
+        #(MAIN_PERIOD * 20);
+
+        // COMMA_3 = 8'b0111_0110 = 0x76
+        data_in = 8'h76;
+        #(MAIN_PERIOD * 20);
+
+        // COMMA_4 = 8'b1101_1010 = 0xDA
+        data_in = 8'hDA;
+        #(MAIN_PERIOD * 20);
+
+        // Finish simulation
+        $display("Simulation complete");
+        $finish;
+    end
+
+    // Monitor outputs
+    initial begin
+        $display("Time   clk_ref  data_in  ser_out data_send data_out data_ready comma");
+        $monitor("%0dns  %b        %h      %b       %b        %h       %b         %b", 
+                 $time, clk_ref, data_in, ser_out, data_send, data_out, data_ready, comma_detected);
+    end
+
+endmodule
